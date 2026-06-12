@@ -12,6 +12,8 @@ contract UniswapV2Router01 is IUniswapV2Router01 {
     address public immutable override factory;
     address public immutable override WETH;
 
+    /// @dev 确保交易在截止时间之前执行
+    /// @param deadline 交易截止时间戳
     modifier ensure(uint deadline) {
         require(deadline >= block.timestamp, 'UniswapV2Router: EXPIRED');
         _;
@@ -22,11 +24,23 @@ contract UniswapV2Router01 is IUniswapV2Router01 {
         WETH = _WETH;
     }
 
+    /// @dev 仅接受来自WETH合约的ETH（通过回退函数）
     receive() external payable {
         assert(msg.sender == WETH); // only accept ETH via fallback from the WETH contract
     }
 
     // **** ADD LIQUIDITY ****
+    // **** 添加流动性 ****
+
+    /// @dev 内部函数：计算添加流动性所需的代币数量
+    /// @param tokenA 代币A地址
+    /// @param tokenB 代币B地址
+    /// @param amountADesired 代币A期望数量
+    /// @param amountBDesired 代币B期望数量
+    /// @param amountAMin 代币A最小数量
+    /// @param amountBMin 代币B最小数量
+    /// @return amountA 实际添加的代币A数量
+    /// @return amountB 实际添加的代币B数量
     function _addLiquidity(
         address tokenA,
         address tokenB,
@@ -36,6 +50,7 @@ contract UniswapV2Router01 is IUniswapV2Router01 {
         uint amountBMin
     ) private returns (uint amountA, uint amountB) {
         // create the pair if it doesn't exist yet
+        // 如果配对还不存在，则创建它
         if (IUniswapV2Factory(factory).getPair(tokenA, tokenB) == address(0)) {
             IUniswapV2Factory(factory).createPair(tokenA, tokenB);
         }
@@ -55,6 +70,19 @@ contract UniswapV2Router01 is IUniswapV2Router01 {
             }
         }
     }
+
+    /// @dev 添加两种代币的流动性
+    /// @param tokenA 代币A地址
+    /// @param tokenB 代币B地址
+    /// @param amountADesired 代币A期望数量
+    /// @param amountBDesired 代币B期望数量
+    /// @param amountAMin 代币A最小数量
+    /// @param amountBMin 代币B最小数量
+    /// @param to 流动性接收地址
+    /// @param deadline 交易截止时间
+    /// @return amountA 实际添加的代币A数量
+    /// @return amountB 实际添加的代币B数量
+    /// @return liquidity 流动性代币数量
     function addLiquidity(
         address tokenA,
         address tokenB,
@@ -71,6 +99,17 @@ contract UniswapV2Router01 is IUniswapV2Router01 {
         TransferHelper.safeTransferFrom(tokenB, msg.sender, pair, amountB);
         liquidity = IUniswapV2Pair(pair).mint(to);
     }
+
+    /// @dev 添加ETH和代币的流动性
+    /// @param token 代币地址
+    /// @param amountTokenDesired 代币期望数量
+    /// @param amountTokenMin 代币最小数量
+    /// @param amountETHMin ETH最小数量
+    /// @param to 流动性接收地址
+    /// @param deadline 交易截止时间
+    /// @return amountToken 实际添加的代币数量
+    /// @return amountETH 实际添加的ETH数量
+    /// @return liquidity 流动性代币数量
     function addLiquidityETH(
         address token,
         uint amountTokenDesired,
@@ -96,6 +135,18 @@ contract UniswapV2Router01 is IUniswapV2Router01 {
     }
 
     // **** REMOVE LIQUIDITY ****
+    // **** 移除流动性 ****
+
+    /// @dev 移除两种代币的流动性
+    /// @param tokenA 代币A地址
+    /// @param tokenB 代币B地址
+    /// @param liquidity 流动性代币数量
+    /// @param amountAMin 代币A最小数量
+    /// @param amountBMin 代币B最小数量
+    /// @param to 流动性接收地址
+    /// @param deadline 交易截止时间
+    /// @return amountA 返回的代币A数量
+    /// @return amountB 返回的代币B数量
     function removeLiquidity(
         address tokenA,
         address tokenB,
@@ -113,6 +164,16 @@ contract UniswapV2Router01 is IUniswapV2Router01 {
         require(amountA >= amountAMin, 'UniswapV2Router: INSUFFICIENT_A_AMOUNT');
         require(amountB >= amountBMin, 'UniswapV2Router: INSUFFICIENT_B_AMOUNT');
     }
+
+    /// @dev 移除ETH和代币的流动性
+    /// @param token 代币地址
+    /// @param liquidity 流动性代币数量
+    /// @param amountTokenMin 代币最小数量
+    /// @param amountETHMin ETH最小数量
+    /// @param to 流动性接收地址
+    /// @param deadline 交易截止时间
+    /// @return amountToken 返回的代币数量
+    /// @return amountETH 返回的ETH数量
     function removeLiquidityETH(
         address token,
         uint liquidity,
@@ -134,6 +195,21 @@ contract UniswapV2Router01 is IUniswapV2Router01 {
         IWETH(WETH).withdraw(amountETH);
         TransferHelper.safeTransferETH(to, amountETH);
     }
+
+    /// @dev 使用permit功能移除流动性（无gas批准）
+    /// @param tokenA 代币A地址
+    /// @param tokenB 代币B地址
+    /// @param liquidity 流动性代币数量
+    /// @param amountAMin 代币A最小数量
+    /// @param amountBMin 代币B最小数量
+    /// @param to 流动性接收地址
+    /// @param deadline 交易截止时间
+    /// @param approveMax 是否批准最大值
+    /// @param v 签名参数v
+    /// @param r 签名参数r
+    /// @param s 签名参数s
+    /// @return amountA 返回的代币A数量
+    /// @return amountB 返回的代币B数量
     function removeLiquidityWithPermit(
         address tokenA,
         address tokenB,
@@ -149,6 +225,20 @@ contract UniswapV2Router01 is IUniswapV2Router01 {
         IUniswapV2Pair(pair).permit(msg.sender, address(this), value, deadline, v, r, s);
         (amountA, amountB) = removeLiquidity(tokenA, tokenB, liquidity, amountAMin, amountBMin, to, deadline);
     }
+
+    /// @dev 使用permit功能移除ETH流动性（无gas批准）
+    /// @param token 代币地址
+    /// @param liquidity 流动性代币数量
+    /// @param amountTokenMin 代币最小数量
+    /// @param amountETHMin ETH最小数量
+    /// @param to 流动性接收地址
+    /// @param deadline 交易截止时间
+    /// @param approveMax 是否批准最大值
+    /// @param v 签名参数v
+    /// @param r 签名参数r
+    /// @param s 签名参数s
+    /// @return amountToken 返回的代币数量
+    /// @return amountETH 返回的ETH数量
     function removeLiquidityETHWithPermit(
         address token,
         uint liquidity,
@@ -166,6 +256,12 @@ contract UniswapV2Router01 is IUniswapV2Router01 {
 
     // **** SWAP ****
     // requires the initial amount to have already been sent to the first pair
+    // **** 交易 ****
+
+    /// @dev 内部函数：执行多跳交易
+    /// @param amounts 每个步骤的代币数量
+    /// @param path 交易路径（代币地址数组）
+    /// @param _to 最终接收地址
     function _swap(uint[] memory amounts, address[] memory path, address _to) private {
         for (uint i; i < path.length - 1; i++) {
             (address input, address output) = (path[i], path[i + 1]);
@@ -176,6 +272,14 @@ contract UniswapV2Router01 is IUniswapV2Router01 {
             IUniswapV2Pair(UniswapV2Library.pairFor(factory, input, output)).swap(amount0Out, amount1Out, to, new bytes(0));
         }
     }
+
+    /// @dev 精确输入代币数量交换为精确输出代币数量
+    /// @param amountIn 输入代币数量
+    /// @param amountOutMin 最小输出数量
+    /// @param path 交易路径
+    /// @param to 接收地址
+    /// @param deadline 交易截止时间
+    /// @return amounts 每个步骤的代币数量
     function swapExactTokensForTokens(
         uint amountIn,
         uint amountOutMin,
@@ -188,6 +292,14 @@ contract UniswapV2Router01 is IUniswapV2Router01 {
         TransferHelper.safeTransferFrom(path[0], msg.sender, UniswapV2Library.pairFor(factory, path[0], path[1]), amounts[0]);
         _swap(amounts, path, to);
     }
+
+    /// @dev 精确输出代币数量交换为最多输入代币数量
+    /// @param amountOut 期望输出数量
+    /// @param amountInMax 最大输入数量
+    /// @param path 交易路径
+    /// @param to 接收地址
+    /// @param deadline 交易截止时间
+    /// @return amounts 每个步骤的代币数量
     function swapTokensForExactTokens(
         uint amountOut,
         uint amountInMax,
@@ -200,6 +312,13 @@ contract UniswapV2Router01 is IUniswapV2Router01 {
         TransferHelper.safeTransferFrom(path[0], msg.sender, UniswapV2Library.pairFor(factory, path[0], path[1]), amounts[0]);
         _swap(amounts, path, to);
     }
+
+    /// @dev 精确ETH数量交换为精确代币数量
+    /// @param amountOutMin 最小输出数量
+    /// @param path 交易路径
+    /// @param to 接收地址
+    /// @param deadline 交易截止时间
+    /// @return amounts 每个步骤的代币数量
     function swapExactETHForTokens(uint amountOutMin, address[] calldata path, address to, uint deadline)
         external
         override
@@ -214,6 +333,14 @@ contract UniswapV2Router01 is IUniswapV2Router01 {
         assert(IWETH(WETH).transfer(UniswapV2Library.pairFor(factory, path[0], path[1]), amounts[0]));
         _swap(amounts, path, to);
     }
+
+    /// @dev 精确代币数量交换为精确ETH数量
+    /// @param amountOut 期望输出ETH数量
+    /// @param amountInMax 最大输入代币数量
+    /// @param path 交易路径
+    /// @param to 接收地址
+    /// @param deadline 交易截止时间
+    /// @return amounts 每个步骤的代币数量
     function swapTokensForExactETH(uint amountOut, uint amountInMax, address[] calldata path, address to, uint deadline)
         external
         override
@@ -228,6 +355,14 @@ contract UniswapV2Router01 is IUniswapV2Router01 {
         IWETH(WETH).withdraw(amounts[amounts.length - 1]);
         TransferHelper.safeTransferETH(to, amounts[amounts.length - 1]);
     }
+
+    /// @dev 精确代币数量交换为精确ETH数量
+    /// @param amountIn 输入代币数量
+    /// @param amountOutMin 最小输出ETH数量
+    /// @param path 交易路径
+    /// @param to 接收地址
+    /// @param deadline 交易截止时间
+    /// @return amounts 每个步骤的代币数量
     function swapExactTokensForETH(uint amountIn, uint amountOutMin, address[] calldata path, address to, uint deadline)
         external
         override
@@ -242,6 +377,13 @@ contract UniswapV2Router01 is IUniswapV2Router01 {
         IWETH(WETH).withdraw(amounts[amounts.length - 1]);
         TransferHelper.safeTransferETH(to, amounts[amounts.length - 1]);
     }
+
+    /// @dev 精确ETH数量交换为精确代币数量
+    /// @param amountOut 期望输出代币数量
+    /// @param path 交易路径
+    /// @param to 接收地址
+    /// @param deadline 交易截止时间
+    /// @return amounts 每个步骤的代币数量
     function swapETHForExactTokens(uint amountOut, address[] calldata path, address to, uint deadline)
         external
         override
@@ -258,22 +400,47 @@ contract UniswapV2Router01 is IUniswapV2Router01 {
         if (msg.value > amounts[0]) TransferHelper.safeTransferETH(msg.sender, msg.value - amounts[0]); // refund dust eth, if any
     }
 
+    // **** 库函数 ****
+
+    /// @dev 计算等价值
+    /// @param amountA 代币A数量
+    /// @param reserveA 代币A储备金
+    /// @param reserveB 代币B储备金
+    /// @return amountB 代币B等价值
     function quote(uint amountA, uint reserveA, uint reserveB) public pure override returns (uint amountB) {
         return UniswapV2Library.quote(amountA, reserveA, reserveB);
     }
 
+    /// @dev 计算最大输出数量
+    /// @param amountIn 输入数量
+    /// @param reserveIn 输入储备金
+    /// @param reserveOut 输出储备金
+    /// @return amountOut 最大输出数量
     function getAmountOut(uint amountIn, uint reserveIn, uint reserveOut) public pure override returns (uint amountOut) {
         return UniswapV2Library.getAmountOut(amountIn, reserveIn, reserveOut);
     }
 
+    /// @dev 计算所需输入数量
+    /// @param amountOut 期望输出数量
+    /// @param reserveIn 输入储备金
+    /// @param reserveOut 输出储备金
+    /// @return amountIn 所需输入数量
     function getAmountIn(uint amountOut, uint reserveIn, uint reserveOut) public pure override returns (uint amountIn) {
         return UniswapV2Library.getAmountOut(amountOut, reserveIn, reserveOut);
     }
 
+    /// @dev 计算多跳输出数量
+    /// @param amountIn 输入数量
+    /// @param path 交易路径
+    /// @return amounts 每个步骤的输出数量
     function getAmountsOut(uint amountIn, address[] memory path) public view override returns (uint[] memory amounts) {
         return UniswapV2Library.getAmountsOut(factory, amountIn, path);
     }
 
+    /// @dev 计算多跳输入数量
+    /// @param amountOut 期望输出数量
+    /// @param path 交易路径
+    /// @return amounts 每个步骤的输入数量
     function getAmountsIn(uint amountOut, address[] memory path) public view override returns (uint[] memory amounts) {
         return UniswapV2Library.getAmountsIn(factory, amountOut, path);
     }

@@ -10,10 +10,17 @@ import './UniswapV2Library.sol';
 
 // library containing some math for dealing with the liquidity shares of a pair, e.g. computing their exact value
 // in terms of the underlying tokens
+// 包含处理配对流动性份额的数学计算，例如计算其精确价值的库
 library UniswapV2LiquidityMathLibrary {
     using SafeMath for uint256;
 
-    // computes the direction and magnitude of the profit-maximizing trade
+    /// @dev 计算利润最大化交易的方向和数量
+    /// @param truePriceTokenA 代币A的真实价格
+    /// @param truePriceTokenB 代币B的真实价格
+    /// @param reserveA 代币A的储备金
+    /// @param reserveB 代币B的储备金
+    /// @return aToB 交易方向（true表示A到B）
+    /// @return amountIn 所需输入数量
     function computeProfitMaximizingTrade(
         uint256 truePriceTokenA,
         uint256 truePriceTokenB,
@@ -35,11 +42,18 @@ library UniswapV2LiquidityMathLibrary {
 
         if (leftSide < rightSide) return (false, 0);
 
-        // compute the amount that must be sent to move the price to the profit-maximizing price
+        // 计算将价格移动到利润最大化价格所需的数量
         amountIn = leftSide.sub(rightSide);
     }
 
-    // gets the reserves after an arbitrage moves the price to the profit-maximizing ratio given an externally observed true price
+    /// @dev 获取套利后将价格移动到利润最大化比率后的储备金
+    /// @param factory 工厂合约地址
+    /// @param tokenA 代币A地址
+    /// @param tokenB 代币B地址
+    /// @param truePriceTokenA 代币A的真实价格
+    /// @param truePriceTokenB 代币B的真实价格
+    /// @return reserveA 套利后的代币A储备金
+    /// @return reserveB 套利后的代币B储备金
     function getReservesAfterArbitrage(
         address factory,
         address tokenA,
@@ -47,19 +61,19 @@ library UniswapV2LiquidityMathLibrary {
         uint256 truePriceTokenA,
         uint256 truePriceTokenB
     ) view internal returns (uint256 reserveA, uint256 reserveB) {
-        // first get reserves before the swap
+        // 首先获取交换前的储备金
         (reserveA, reserveB) = UniswapV2Library.getReserves(factory, tokenA, tokenB);
 
         require(reserveA > 0 && reserveB > 0, 'UniswapV2ArbitrageLibrary: ZERO_PAIR_RESERVES');
 
-        // then compute how much to swap to arb to the true price
+        // 然后计算套利到真实价格所需的交换数量
         (bool aToB, uint256 amountIn) = computeProfitMaximizingTrade(truePriceTokenA, truePriceTokenB, reserveA, reserveB);
 
         if (amountIn == 0) {
             return (reserveA, reserveB);
         }
 
-        // now affect the trade to the reserves
+        // 现在将交易应用到储备金
         if (aToB) {
             uint amountOut = UniswapV2Library.getAmountOut(amountIn, reserveA, reserveB);
             reserveA += amountIn;
@@ -71,7 +85,15 @@ library UniswapV2LiquidityMathLibrary {
         }
     }
 
-    // computes liquidity value given all the parameters of the pair
+    /// @dev 计算流动性价值，给定配对的所有参数
+    /// @param reservesA 代币A的储备金
+    /// @param reservesB 代币B的储备金
+    /// @param totalSupply 总供应量
+    /// @param liquidityAmount 流动性数量
+    /// @param feeOn 是否开启费用机制
+    /// @param kLast 上次k值
+    /// @return tokenAAmount 代币A的数量
+    /// @return tokenBAmount 代币B的数量
     function computeLiquidityValue(
         uint256 reservesA,
         uint256 reservesB,
@@ -94,9 +116,14 @@ library UniswapV2LiquidityMathLibrary {
         return (reservesA.mul(liquidityAmount) / totalSupply, reservesB.mul(liquidityAmount) / totalSupply);
     }
 
-    // get all current parameters from the pair and compute value of a liquidity amount
-    // **note this is subject to manipulation, e.g. sandwich attacks**. prefer passing a manipulation resistant price to
-    // #getLiquidityValueAfterArbitrageToPrice
+    /// @dev 从配对获取所有当前参数并计算流动性数量的价值
+    /// **注意：这容易受到操纵，例如三明治攻击**。建议传递抗操纵价格给 #getLiquidityValueAfterArbitrageToPrice
+    /// @param factory 工厂合约地址
+    /// @param tokenA 代币A地址
+    /// @param tokenB 代币B地址
+    /// @param liquidityAmount 流动性数量
+    /// @return tokenAAmount 代币A的数量
+    /// @return tokenBAmount 代币B的数量
     function getLiquidityValue(
         address factory,
         address tokenA,
@@ -111,8 +138,15 @@ library UniswapV2LiquidityMathLibrary {
         return computeLiquidityValue(reservesA, reservesB, totalSupply, liquidityAmount, feeOn, kLast);
     }
 
-    // given two tokens, tokenA and tokenB, and their "true price", i.e. the observed ratio of value of token A to token B,
-    // and a liquidity amount, returns the value of the liquidity in terms of tokenA and tokenB
+    /// @dev 给定两个代币及其"真实价格"（即代币A与代币B的价值比率）和流动性数量，返回流动性在代币A和代币B中的价值
+    /// @param factory 工厂合约地址
+    /// @param tokenA 代币A地址
+    /// @param tokenB 代币B地址
+    /// @param truePriceTokenA 代币A的真实价格
+    /// @param truePriceTokenB 代币B的真实价格
+    /// @param liquidityAmount 流动性数量
+    /// @return tokenAAmount 代币A的数量
+    /// @return tokenBAmount 代币B的数量
     function getLiquidityValueAfterArbitrageToPrice(
         address factory,
         address tokenA,
@@ -129,7 +163,7 @@ library UniswapV2LiquidityMathLibrary {
         uint kLast = feeOn ? pair.kLast() : 0;
         uint totalSupply = pair.totalSupply();
 
-        // this also checks that totalSupply > 0
+        // 这也检查了totalSupply > 0
         require(totalSupply >= liquidityAmount && liquidityAmount > 0, 'ComputeLiquidityValue: LIQUIDITY_AMOUNT');
 
         (uint reservesA, uint reservesB) = getReservesAfterArbitrage(factory, tokenA, tokenB, truePriceTokenA, truePriceTokenB);
