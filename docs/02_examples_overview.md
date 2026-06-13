@@ -6,9 +6,9 @@
 | ------------------------------------------------------------------------------ | ---------------------------- | -------------- |
 | [03_example_compute_liquidity_value.md](03_example_compute_liquidity_value.md) | ExampleComputeLiquidityValue | 流动性价值计算 |
 | [04_example_flash_swap.md](04_example_flash_swap.md)                           | ExampleFlashSwap             | 闪电交换套利   |
-| [05_example_oracle_simple.md](05_example_oracle_simple.md)                     | ExampleOracleSimple          | 固定窗口预言机 |
-| [06_example_sliding_window_oracle.md](06_example_sliding_window_oracle.md)     | ExampleSlidingWindowOracle   | 滑动窗口预言机 |
-| [07_example_swap_to_price.md](07_example_swap_to_price.md)                     | ExampleSwapToPrice           | 目标价格交换   |
+| [05_example_swap_to_price.md](05_example_swap_to_price.md)                     | ExampleSwapToPrice           | 目标价格交换   |
+| [06_example_oracle_simple.md](06_example_oracle_simple.md)                     | ExampleOracleSimple          | 固定窗口预言机 |
+| [07_example_sliding_window_oracle.md](07_example_sliding_window_oracle.md)     | ExampleSlidingWindowOracle   | 滑动窗口预言机 |
 
 ## 功能分类
 
