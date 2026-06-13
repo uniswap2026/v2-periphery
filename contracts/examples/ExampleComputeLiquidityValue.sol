@@ -2,16 +2,29 @@ pragma solidity =0.6.6;
 
 import '../libraries/UniswapV2LiquidityMathLibrary.sol';
 
+/// @title 计算流动性价值示例合约
+/// @notice 演示如何使用 UniswapV2LiquidityMathLibrary 计算流动性价值
+/// @dev 此合约用于演示目的，包含计算流动性价值的各种方法
 contract ExampleComputeLiquidityValue {
     using SafeMath for uint256;
 
+    /// @dev Uniswap V2 工厂合约地址
     address public immutable factory;
 
+    /// @dev 构造函数：初始化工厂地址
+    /// @param factory_ Uniswap V2 工厂合约地址
     constructor(address factory_) public {
         factory = factory_;
     }
 
-    // see UniswapV2LiquidityMathLibrary#getReservesAfterArbitrage
+    /// @notice 获取套利后的储备金
+    /// @dev 参见 UniswapV2LiquidityMathLibrary#getReservesAfterArbitrage
+    /// @param tokenA 代币A地址
+    /// @param tokenB 代币B地址
+    /// @param truePriceTokenA 代币A的真实价格
+    /// @param truePriceTokenB 代币B的真实价格
+    /// @return reserveA 套利后的代币A储备金
+    /// @return reserveB 套利后的代币B储备金
     function getReservesAfterArbitrage(
         address tokenA,
         address tokenB,
@@ -27,7 +40,13 @@ contract ExampleComputeLiquidityValue {
         );
     }
 
-    // see UniswapV2LiquidityMathLibrary#getLiquidityValue
+    /// @notice 获取流动性价值
+    /// @dev 参见 UniswapV2LiquidityMathLibrary#getLiquidityValue
+    /// @param tokenA 代币A地址
+    /// @param tokenB 代币B地址
+    /// @param liquidityAmount LP代币数量
+    /// @return tokenAAmount 对应的代币A数量
+    /// @return tokenBAmount 对应的代币B数量
     function getLiquidityValue(
         address tokenA,
         address tokenB,
@@ -44,7 +63,15 @@ contract ExampleComputeLiquidityValue {
         );
     }
 
-    // see UniswapV2LiquidityMathLibrary#getLiquidityValueAfterArbitrageToPrice
+    /// @notice 获取套利到目标价格后的流动性价值
+    /// @dev 参见 UniswapV2LiquidityMathLibrary#getLiquidityValueAfterArbitrageToPrice
+    /// @param tokenA 代币A地址
+    /// @param tokenB 代币B地址
+    /// @param truePriceTokenA 代币A的真实价格
+    /// @param truePriceTokenB 代币B的真实价格
+    /// @param liquidityAmount LP代币数量
+    /// @return tokenAAmount 套利后对应的代币A数量
+    /// @return tokenBAmount 套利后对应的代币B数量
     function getLiquidityValueAfterArbitrageToPrice(
         address tokenA,
         address tokenB,
@@ -65,7 +92,14 @@ contract ExampleComputeLiquidityValue {
         );
     }
 
-    // test function to measure the gas cost of the above function
+    /// @notice 测试函数：测量 getLiquidityValueAfterArbitrageToPrice 的Gas消耗
+    /// @dev 用于测试目的，测量函数的Gas成本
+    /// @param tokenA 代币A地址
+    /// @param tokenB 代币B地址
+    /// @param truePriceTokenA 代币A的真实价格
+    /// @param truePriceTokenB 代币B的真实价格
+    /// @param liquidityAmount LP代币数量
+    /// @return Gas消耗量
     function getGasCostOfGetLiquidityValueAfterArbitrageToPrice(
         address tokenA,
         address tokenB,
