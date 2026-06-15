@@ -414,4 +414,3 @@ aToB = false: tokenB → tokenA (卖出 B，买入 A)
 ---
 
 [← 返回示例合约概览](02_examples_overview.md)  
-[← 查看闪电交换套利](04_example_flash_swap.md)
