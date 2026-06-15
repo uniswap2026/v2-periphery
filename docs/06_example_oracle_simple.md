@@ -346,4 +346,3 @@ uint32 timeElapsed = blockTimestamp - blockTimestampLast; // overflow is desired
 ---
 
 [← 返回示例合约概览](02_examples_overview.md)  
-[→ 查看滑动窗口预言机](07_example_sliding_window_oracle.md)

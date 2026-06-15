@@ -453,4 +453,3 @@ await oracle.update(tokenA, tokenB);
 ---
 
 [← 返回示例合约概览](02_examples_overview.md)  
-[← 查看简单预言机](06_example_oracle_simple.md)
